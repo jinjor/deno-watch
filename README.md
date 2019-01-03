@@ -24,7 +24,7 @@ const end = watch("src").start(changes => {
 
 ## Options
 
-Written in the [source code](./index.ts).
+Written in the [source code](./main.ts).
 
 ## Benchmark
 
