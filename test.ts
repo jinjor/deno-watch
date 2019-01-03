@@ -178,7 +178,7 @@ test(async function WatchByGenerator() {
 test(async function Benchmark() {
   await inTmpDir(async tmpDir => {
     const files = [];
-    await generateManyFiles(tmpDir, files);
+    generateManyFiles(tmpDir, files);
     console.log(`generated ${files.length} files.`);
     const end = watch(tmpDir).start(result => {
       console.log(
@@ -207,12 +207,7 @@ test(async function Benchmark() {
         const index = Math.floor(Math.random() * files.length);
         const fileName = files[index];
         if (fileName) {
-          try {
-            await remove(fileName);
-          } catch (e) {
-            console.log("error");
-            console.log(e);
-          }
+          await remove(fileName);
         }
         files[index] = null;
       }
@@ -225,20 +220,16 @@ test(async function Benchmark() {
 const DEPTH = 7;
 const FILE_PER_DIR = 10;
 const DIR_PER_DIR = 3;
-async function generateManyFiles(dir, files, depth = DEPTH) {
+function generateManyFiles(dir, files, depth = DEPTH) {
   if (depth <= 0) {
     return;
   }
   for (let i = 0; i < FILE_PER_DIR; i++) {
-    try {
-      const f = genFile(dir);
-      files.push(f.path);
-    } catch (e) {
-      console.error("WARN:", e.message);
-    }
+    const f = genFile(dir);
+    files.push(f.path);
   }
   for (let i = 0; i < DIR_PER_DIR; i++) {
     const d = genDir(dir);
-    await generateManyFiles(d.path, files, depth - 1);
+    generateManyFiles(d.path, files, depth - 1);
   }
 }

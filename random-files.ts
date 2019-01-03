@@ -1,5 +1,4 @@
 import {
-  removeAll,
   makeTempDirSync,
   writeFileSync,
   removeSync,
@@ -67,7 +66,7 @@ class F {
   }
   remove() {
     if (this.isDir) {
-      removeAll(this.path);
+      removeAllSync(this.path);
     } else {
       removeSync(this.path);
     }
