@@ -1,0 +1,15 @@
+language: minimal
+
+os:
+  - osx
+  - linux
+
+before_install:
+  - export PATH=$HOME/.deno/bin:$PATH
+
+install:
+  - curl -L https://deno.land/x/install/install.py | python
+
+script:
+  - deno -v
+  - deno test.ts --allow-write --allow-run
