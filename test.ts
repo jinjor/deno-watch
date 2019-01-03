@@ -230,8 +230,12 @@ async function generateManyFiles(dir, files, depth = DEPTH) {
     return;
   }
   for (let i = 0; i < FILE_PER_DIR; i++) {
-    const f = genFile(dir);
-    files.push(f.path);
+    try {
+      const f = genFile(dir);
+      files.push(f.path);
+    } catch (e) {
+      console.error("WARN:", e.message);
+    }
   }
   for (let i = 0; i < DIR_PER_DIR; i++) {
     const d = genDir(dir);
