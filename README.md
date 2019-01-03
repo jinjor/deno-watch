@@ -1,4 +1,6 @@
-# Watch [![Build Status](https://travis-ci.org/jinjor/deno-watch.svg?branch=master)](https://travis-ci.org/jinjor/deno-watch)
+# Watch
+
+[![Build Status](https://travis-ci.org/jinjor/deno-watch.svg?branch=master)](https://travis-ci.org/jinjor/deno-watch)
 
 A pure deno file watcher.
 
@@ -49,3 +51,11 @@ Try yourself:
 ```
 deno https://raw.githubusercontent.com/jinjor/deno-watch/master/test.ts --allow-write
 ```
+
+## Limitation
+
+Symlink may not work on Windows.
+
+## License
+
+MIT
