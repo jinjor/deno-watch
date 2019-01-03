@@ -144,13 +144,12 @@ async function* run(
     lastStartTime = Date.now();
     let changes = new Changes();
     changes.startTime = lastStartTime;
-
-    changes.fileCount = Object.keys(files).length;
     const newFiles = {};
     await detectChanges(files, newFiles, dirs, followSymlink, filter, changes);
     files = newFiles;
-
+    changes.fileCount = Object.keys(newFiles).length;
     changes.endTime = Date.now();
+
     if (changes.length) {
       yield changes;
     }
