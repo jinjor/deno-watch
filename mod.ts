@@ -5,7 +5,9 @@ import {
   lstat,
   readDirSync,
   readlinkSync,
-  FileInfo
+  FileInfo,
+  DenoError,
+  ErrorKind
 } from "deno";
 
 /** The result of checking in one loop */
@@ -227,7 +229,15 @@ async function walk(
     }
     if (info.isDirectory()) {
       const files = await readDir(path);
-      promises.push(walk(prev, curr, files, followSymlink, filter, changes));
+      promises.push(
+        walk(prev, curr, files, followSymlink, filter, changes).catch(e => {
+          if (e instanceof DenoError && e.kind === ErrorKind.NotFound) {
+            // ignore
+          } else {
+            return Promise.reject(e);
+          }
+        })
+      );
     } else if (info.isFile()) {
       if (curr[path]) {
         continue;
