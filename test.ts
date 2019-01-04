@@ -1,5 +1,5 @@
 import { writeFile, remove } from "deno";
-import watch from "main.ts";
+import watch from "mod.ts";
 import {
   test,
   assertEqual
