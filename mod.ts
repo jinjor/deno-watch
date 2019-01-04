@@ -63,7 +63,9 @@ export interface Options {
 
 /** The watcher */
 export interface Watcher extends AsyncIterable<Changes> {
-  start(callback: (changes: Changes) => Promise<void> | void): () => void;
+  start(
+    callback: (changes: Changes) => Promise<void> | void
+  ): () => Promise<void>;
 }
 
 const defaultOptions = {
@@ -107,15 +109,17 @@ export default function watch(
         abort: false,
         timeout: null
       };
-      (async () => {
+      const loop = (async () => {
         for await (const changes of run(dirs_, options, state)) {
           await callback(changes);
         }
       })();
-      return () => {
+      return async () => {
         state.abort = true;
         if (state.timeout) {
           clearTimeout(state.timeout);
+        } else {
+          await loop;
         }
       };
     }

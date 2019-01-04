@@ -46,7 +46,7 @@ test(async function Watch() {
       await delay(1200);
       assertChanges(changes, 0, 0, 1);
     } finally {
-      end();
+      await end();
     }
   });
 });
@@ -94,7 +94,7 @@ test(async function Symlink() {
       await tree(anotherDir);
       throw e;
     } finally {
-      end();
+      await end();
     }
   });
 });
@@ -120,7 +120,7 @@ test(async function dotFiles() {
       dir.remove();
       assertChanges(changes, 0, 0, 0);
     } finally {
-      end();
+      await end();
     }
   });
 });
@@ -213,7 +213,7 @@ test(async function Benchmark() {
         files[index] = null;
       }
     } finally {
-      end();
+      await end();
     }
   });
 });
