@@ -7,7 +7,7 @@ A pure deno file watcher.
 ## Example
 
 ```typescript
-import watch from "https://raw.githubusercontent.com/jinjor/deno-watch/1.0.0/mod.ts";
+import watch from "https://deno.land/x/watch@1.0.1/mod.ts";
 
 for await (const changes of watch("src")) {
   console.log(changes.added);
@@ -49,7 +49,7 @@ took 145ms to traverse 10960 files
 Try yourself:
 
 ```
-deno https://raw.githubusercontent.com/jinjor/deno-watch/master/test.ts --allow-write
+deno https://deno.land/x/watch/test.ts --allow-write
 ```
 
 ## Limitation

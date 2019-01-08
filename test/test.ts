@@ -1,9 +1,6 @@
 import { writeFile, remove, mkdir, writeFileSync } from "deno";
 import watch from "../mod.ts";
-import {
-  test,
-  assertEqual
-} from "https://raw.githubusercontent.com/denoland/deno_std/master/testing/mod.ts";
+import { test, assertEqual } from "https://deno.land/x/testing@v0.2.5/mod.ts";
 import {
   inTmpDir,
   genFile,
