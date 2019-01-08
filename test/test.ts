@@ -50,6 +50,25 @@ test(async function Watch() {
     }
   });
 });
+test(async function singleFile() {
+  await inTmpDir(async tmpDir => {
+    const f = genFile(tmpDir);
+    let changes = { added: [], modified: [], deleted: [] };
+    const end = watch(f.path).start(changes_ => {
+      changes = changes_;
+    });
+    try {
+      f.modify();
+      await delay(1200);
+      assertChanges(changes, 0, 1, 0);
+      f.remove();
+      await delay(1200);
+      assertChanges(changes, 0, 0, 1);
+    } finally {
+      await end();
+    }
+  });
+});
 test(async function Symlink() {
   await inTmpDirs(2, async ([tmpDir, anotherDir]) => {
     let changes = { added: [], modified: [], deleted: [] };
