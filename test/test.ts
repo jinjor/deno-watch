@@ -1,4 +1,4 @@
-import { writeFile, remove } from "deno";
+import { writeFile, remove, mkdir, writeFileSync } from "deno";
 import watch from "../mod.ts";
 import {
   test,
@@ -47,7 +47,11 @@ test(async function Watch() {
       assertChanges(changes, 0, 0, 1);
       await remove(tmpDir);
       await delay(1200);
-      assertChanges(changes, 0, 0, 0);
+      assertChanges(changes, 0, 0, 1);
+      await mkdir(tmpDir);
+      genFile(tmpDir);
+      await delay(1200);
+      assertChanges(changes, 1, 0, 0);
     } finally {
       await end();
     }
@@ -68,6 +72,9 @@ test(async function singleFile() {
       f.remove();
       await delay(1200);
       assertChanges(changes, 0, 0, 1);
+      writeFileSync(f.path, new Uint8Array());
+      await delay(1200);
+      assertChanges(changes, 1, 0, 0);
     } finally {
       await end();
     }
