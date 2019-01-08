@@ -79,7 +79,7 @@ const defaultOptions = {
 };
 
 /**
- * Watch directories and detect changes.
+ * Watch files/directories and detect changes.
  * @example
  * // Basic usage.
  * for await (const changes of watch("src")) {
