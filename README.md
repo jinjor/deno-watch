@@ -52,9 +52,10 @@ Try yourself:
 deno https://deno.land/x/watch/test.ts --allow-write
 ```
 
-## Limitation
+## Limitations
 
-Symlink may not work on Windows.
+- Changes within 1s cannot be detected.
+- Symlink may not work on Windows.
 
 ## License
 
