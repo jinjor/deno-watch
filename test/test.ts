@@ -1,9 +1,6 @@
-import { writeFile, remove } from "deno";
-import watch from "mod.ts";
-import {
-  test,
-  assertEqual
-} from "https://raw.githubusercontent.com/denoland/deno_std/master/testing/mod.ts";
+import { writeFile, remove, mkdir, writeFileSync } from "deno";
+import watch from "../mod.ts";
+import { test, assertEqual } from "https://deno.land/x/testing@v0.2.5/mod.ts";
 import {
   inTmpDir,
   genFile,
@@ -45,6 +42,36 @@ test(async function Watch() {
       f.remove();
       await delay(1200);
       assertChanges(changes, 0, 0, 1);
+      await remove(tmpDir);
+      await delay(1200);
+      assertChanges(changes, 0, 0, 1);
+      await mkdir(tmpDir);
+      genFile(tmpDir);
+      await delay(1200);
+      assertChanges(changes, 1, 0, 0);
+    } finally {
+      await end();
+    }
+  });
+});
+test(async function singleFile() {
+  await inTmpDir(async tmpDir => {
+    const f = genFile(tmpDir);
+    let changes = { added: [], modified: [], deleted: [] };
+    const end = watch(f.path).start(changes_ => {
+      changes = changes_;
+    });
+    try {
+      await delay(1000);
+      f.modify();
+      await delay(1200);
+      assertChanges(changes, 0, 1, 0);
+      f.remove();
+      await delay(1200);
+      assertChanges(changes, 0, 0, 1);
+      writeFileSync(f.path, new Uint8Array());
+      await delay(1200);
+      assertChanges(changes, 1, 0, 0);
     } finally {
       await end();
     }
