@@ -97,14 +97,14 @@ const defaultOptions = {
  * @param options
  */
 export default function watch(
-  dirs: string | string[],
+  targets: string | string[],
   options?: Options
 ): Watcher {
-  const dirs_ = Array.isArray(dirs) ? dirs : [dirs];
+  const targets_ = Array.isArray(targets) ? targets : [targets];
   options = Object.assign({}, defaultOptions, options);
   return {
     [Symbol.asyncIterator]() {
-      return run(dirs_, options);
+      return run(targets_, options);
     },
     start: function(callback: (changes: Changes) => Promise<void> | void) {
       const state = {
@@ -112,7 +112,7 @@ export default function watch(
         timeout: null
       };
       const loop = (async () => {
-        for await (const changes of run(dirs_, options, state)) {
+        for await (const changes of run(targets_, options, state)) {
           await callback(changes);
         }
       })();
@@ -128,7 +128,7 @@ export default function watch(
   };
 }
 async function* run(
-  dirs: string[],
+  targets: string[],
   options: Options,
   state = {
     abort: false,
@@ -139,7 +139,7 @@ async function* run(
   const filter = makeFilter(options);
   let lastStartTime = Date.now();
   let files = {};
-  collect(files, dirs, followSymlink, filter);
+  collect(files, targets, followSymlink, filter);
 
   while (!state.abort) {
     let waitTime = Math.max(0, interval - (Date.now() - lastStartTime));
@@ -151,7 +151,14 @@ async function* run(
     let changes = new Changes();
     changes.startTime = lastStartTime;
     const newFiles = {};
-    await detectChanges(files, newFiles, dirs, followSymlink, filter, changes);
+    await detectChanges(
+      files,
+      newFiles,
+      targets,
+      followSymlink,
+      filter,
+      changes
+    );
     files = newFiles;
     changes.fileCount = Object.keys(newFiles).length;
     changes.endTime = Date.now();
@@ -188,25 +195,25 @@ function makeFilter({ test, ignore, ignoreDotFiles }: Options) {
 async function detectChanges(
   prev: any,
   curr: any,
-  dirs: string[],
+  targets: string[],
   followSymlink: boolean,
   filter: (f: FileInfo, path: string) => boolean,
   changes: Changes
 ): Promise<void> {
-  await walk(prev, curr, dirs, followSymlink, filter, changes);
+  await walk(prev, curr, targets, followSymlink, filter, changes);
   Array.prototype.push.apply(changes.deleted, Object.keys(prev));
 }
 
 async function walk(
   prev: any,
   curr: any,
-  files: (string | FileInfo)[],
+  targets: (string | FileInfo)[],
   followSymlink: boolean,
   filter: (f: FileInfo, path: string) => boolean,
   changes: Changes
 ): Promise<void> {
   const promises = [];
-  for (let f of files) {
+  for (let f of targets) {
     let linkPath;
     let path;
     let info;
@@ -256,11 +263,11 @@ async function walk(
 
 function collect(
   all: any,
-  files: (string | FileInfo)[],
+  targets: (string | FileInfo)[],
   followSymlink: boolean,
   filter: (f: FileInfo, path?: string) => boolean
 ): void {
-  for (let f of files) {
+  for (let f of targets) {
     let linkPath;
     let path;
     let info;
@@ -296,7 +303,7 @@ async function statTraverse(path: string): Promise<FileInfo> {
     const targetPath = await readlink(path);
     return statTraverse(targetPath);
   } else {
-    info.path = path;
+    info.path = info.path || path;
     return info;
   }
 }
@@ -306,7 +313,7 @@ function statTraverseSync(path: string): FileInfo {
     const targetPath = readlinkSync(path);
     return statTraverseSync(targetPath);
   } else {
-    info.path = path;
+    info.path = info.path || path;
     return info;
   }
 }
