@@ -7,7 +7,7 @@ A pure deno file watcher.
 ## Example
 
 ```typescript
-import watch from "https://deno.land/x/watch@1.0.1/mod.ts";
+import watch from "https://deno.land/x/watch@1.1.0/mod.ts";
 
 for await (const changes of watch("src")) {
   console.log(changes.added);
