@@ -12,4 +12,4 @@ install:
 
 script:
   - deno -v
-  - deno test.ts --allow-write --allow-run
+  - deno test/test.ts --allow-write --allow-run
