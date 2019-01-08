@@ -45,6 +45,9 @@ test(async function Watch() {
       f.remove();
       await delay(1200);
       assertChanges(changes, 0, 0, 1);
+      await remove(tmpDir);
+      await delay(1200);
+      assertChanges(changes, 0, 0, 0);
     } finally {
       await end();
     }
@@ -62,9 +65,9 @@ test(async function singleFile() {
       f.modify();
       await delay(1200);
       assertChanges(changes, 0, 1, 0);
-      // f.remove();
-      // await delay(1200);
-      // assertChanges(changes, 0, 0, 1);
+      f.remove();
+      await delay(1200);
+      assertChanges(changes, 0, 0, 1);
     } finally {
       await end();
     }

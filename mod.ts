@@ -217,16 +217,24 @@ async function walk(
     let linkPath;
     let path;
     let info;
-    if (typeof f === "string") {
-      path = f;
-      info = await (followSymlink ? statTraverse : lstat)(f);
-    } else if (f.isSymlink() && followSymlink) {
-      linkPath = f.path;
-      info = await statTraverse(f.path);
-      path = info.path;
-    } else {
-      path = f.path;
-      info = f;
+    try {
+      if (typeof f === "string") {
+        path = f;
+        info = await (followSymlink ? statTraverse : lstat)(f);
+      } else if (f.isSymlink() && followSymlink) {
+        linkPath = f.path;
+        info = await statTraverse(f.path);
+        path = info.path;
+      } else {
+        path = f.path;
+        info = f;
+      }
+    } catch (e) {
+      if (e instanceof DenoError && e.kind === ErrorKind.NotFound) {
+        continue;
+      } else {
+        throw e;
+      }
     }
     if (!path) {
       throw new Error("path not found");
@@ -236,15 +244,7 @@ async function walk(
     }
     if (info.isDirectory()) {
       const files = await readDir(path);
-      promises.push(
-        walk(prev, curr, files, followSymlink, filter, changes).catch(e => {
-          if (e instanceof DenoError && e.kind === ErrorKind.NotFound) {
-            // ignore
-          } else {
-            return Promise.reject(e);
-          }
-        })
-      );
+      promises.push(walk(prev, curr, files, followSymlink, filter, changes));
     } else if (info.isFile()) {
       if (curr[path]) {
         continue;
@@ -271,16 +271,24 @@ function collect(
     let linkPath;
     let path;
     let info;
-    if (typeof f === "string") {
-      path = f;
-      info = (followSymlink ? statTraverseSync : lstatSync)(f);
-    } else if (f.isSymlink() && followSymlink) {
-      linkPath = f.path;
-      path = readlinkSync(f.path);
-      info = statTraverseSync(path);
-    } else {
-      path = f.path;
-      info = f;
+    try {
+      if (typeof f === "string") {
+        path = f;
+        info = (followSymlink ? statTraverseSync : lstatSync)(f);
+      } else if (f.isSymlink() && followSymlink) {
+        linkPath = f.path;
+        path = readlinkSync(f.path);
+        info = statTraverseSync(path);
+      } else {
+        path = f.path;
+        info = f;
+      }
+    } catch (e) {
+      if (e instanceof DenoError && e.kind === ErrorKind.NotFound) {
+        continue;
+      } else {
+        throw e;
+      }
     }
     if (!path) {
       throw new Error("path not found");
