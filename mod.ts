@@ -176,7 +176,7 @@ function makeFilter({ test, ignore, ignoreDotFiles }: Options) {
     if (ignoreDotFiles) {
       const splitted = path.split("/");
       const name = f.name || splitted[splitted.length - 1];
-      if (name.charAt(0) === ".") {
+      if (/^\.[^.]+/.test(name)) {
         return false;
       }
     }
