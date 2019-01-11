@@ -207,48 +207,50 @@ test(async function WatchByGenerator() {
   });
 });
 
-test(async function Benchmark() {
-  await inTmpDir(async tmpDir => {
-    const files = [];
-    generateManyFiles(tmpDir, files);
-    console.log(`generated ${files.length} files.`);
-    const end = watch(tmpDir).start(result => {
-      console.log(
-        `took ${result.time}ms to traverse ${result.fileCount} files`
-      );
-    });
-    try {
-      console.log("[Add]");
-      for (let i = 0; i < 4000; i++) {
-        await delay(1);
-        let fileName = files[Math.floor(Math.random() * files.length)];
-        fileName = fileName + "-" + i;
-        await writeFile(fileName, new Uint8Array(0));
-        files.push(fileName);
-      }
-      console.log("[Modify]");
-      for (let i = 0; i < 4000; i++) {
-        await delay(1);
-        await writeFile(
-          files[Math.floor(Math.random() * files.length)],
-          new Uint8Array(0)
+if (platform.os !== "win") {
+  test(async function Benchmark() {
+    await inTmpDir(async tmpDir => {
+      const files = [];
+      generateManyFiles(tmpDir, files);
+      console.log(`generated ${files.length} files.`);
+      const end = watch(tmpDir).start(result => {
+        console.log(
+          `took ${result.time}ms to traverse ${result.fileCount} files`
         );
-      }
-      console.log("[Delete]");
-      for (let i = 0; i < 4000; i++) {
-        await delay(1);
-        const index = Math.floor(Math.random() * files.length);
-        const fileName = files[index];
-        if (fileName) {
-          await remove(fileName);
+      });
+      try {
+        console.log("[Add]");
+        for (let i = 0; i < 4000; i++) {
+          await delay(1);
+          let fileName = files[Math.floor(Math.random() * files.length)];
+          fileName = fileName + "-" + i;
+          await writeFile(fileName, new Uint8Array(0));
+          files.push(fileName);
         }
-        files[index] = null;
+        console.log("[Modify]");
+        for (let i = 0; i < 4000; i++) {
+          await delay(1);
+          await writeFile(
+            files[Math.floor(Math.random() * files.length)],
+            new Uint8Array(0)
+          );
+        }
+        console.log("[Delete]");
+        for (let i = 0; i < 4000; i++) {
+          await delay(1);
+          const index = Math.floor(Math.random() * files.length);
+          const fileName = files[index];
+          if (fileName) {
+            await remove(fileName);
+          }
+          files[index] = null;
+        }
+      } finally {
+        await end();
       }
-    } finally {
-      await end();
-    }
+    });
   });
-});
+}
 
 const DEPTH = 7;
 const FILE_PER_DIR = 10;
