@@ -1,6 +1,7 @@
 # Watch
 
 [![Build Status](https://travis-ci.org/jinjor/deno-watch.svg?branch=master)](https://travis-ci.org/jinjor/deno-watch)
+[![Build status](https://ci.appveyor.com/api/projects/status/ri4l7qbn314e1uww?svg=true)](https://ci.appveyor.com/project/jinjor/deno-watch)
 
 A pure deno file watcher.
 

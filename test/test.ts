@@ -1,4 +1,4 @@
-import { writeFile, remove, mkdir, writeFileSync } from "deno";
+import { writeFile, remove, mkdir, writeFileSync, platform } from "deno";
 import watch from "../mod.ts";
 import { test, assertEqual } from "https://deno.land/x/testing@v0.2.5/mod.ts";
 import {
@@ -77,54 +77,57 @@ test(async function singleFile() {
     }
   });
 });
-test(async function Symlink() {
-  await inTmpDirs(2, async ([tmpDir, anotherDir]) => {
-    let changes = { added: [], modified: [], deleted: [] };
-    const end = watch(tmpDir, {
-      followSymlink: true
-    }).start(changes_ => {
-      changes = changes_;
+
+if (platform.os !== "win") {
+  test(async function Symlink() {
+    await inTmpDirs(2, async ([tmpDir, anotherDir]) => {
+      let changes = { added: [], modified: [], deleted: [] };
+      const end = watch(tmpDir, {
+        followSymlink: true
+      }).start(changes_ => {
+        changes = changes_;
+      });
+      try {
+        {
+          const f = genFile(anotherDir);
+          const link = genLink(tmpDir, f.path);
+          await delay(1200);
+          assertChanges(changes, 1, 0, 0);
+          f.modify();
+          await delay(1200);
+          assertChanges(changes, 0, 1, 0);
+        }
+        {
+          const f = genFile(anotherDir);
+          const link1 = genLink(anotherDir, f.path);
+          const link2 = genLink(tmpDir, link1.path);
+          const link3 = genLink(tmpDir, link2.path);
+          await delay(1200);
+          assertChanges(changes, 1, 0, 0);
+          f.modify();
+          await delay(1200);
+          assertChanges(changes, 0, 1, 0);
+        }
+        {
+          const dir = genDir(anotherDir);
+          const f = genFile(dir.path);
+          const link = genLink(tmpDir, f.path);
+          await delay(1200);
+          assertChanges(changes, 1, 0, 0);
+          f.modify();
+          await delay(1200);
+          assertChanges(changes, 0, 1, 0);
+        }
+      } catch (e) {
+        await tree(tmpDir);
+        await tree(anotherDir);
+        throw e;
+      } finally {
+        await end();
+      }
     });
-    try {
-      {
-        const f = genFile(anotherDir);
-        const link = genLink(tmpDir, f.path);
-        await delay(1200);
-        assertChanges(changes, 1, 0, 0);
-        f.modify();
-        await delay(1200);
-        assertChanges(changes, 0, 1, 0);
-      }
-      {
-        const f = genFile(anotherDir);
-        const link1 = genLink(anotherDir, f.path);
-        const link2 = genLink(tmpDir, link1.path);
-        const link3 = genLink(tmpDir, link2.path);
-        await delay(1200);
-        assertChanges(changes, 1, 0, 0);
-        f.modify();
-        await delay(1200);
-        assertChanges(changes, 0, 1, 0);
-      }
-      {
-        const dir = genDir(anotherDir);
-        const f = genFile(dir.path);
-        const link = genLink(tmpDir, f.path);
-        await delay(1200);
-        assertChanges(changes, 1, 0, 0);
-        f.modify();
-        await delay(1200);
-        assertChanges(changes, 0, 1, 0);
-      }
-    } catch (e) {
-      await tree(tmpDir);
-      await tree(anotherDir);
-      throw e;
-    } finally {
-      await end();
-    }
   });
-});
+}
 
 test(async function dotFiles() {
   await inTmpDir(async tmpDir => {
@@ -136,9 +139,11 @@ test(async function dotFiles() {
       const f = genFile(tmpDir, { prefix: "." });
       await delay(1200);
       assertChanges(changes, 0, 0, 0);
-      const link = genLink(tmpDir, f.path);
-      await delay(1200);
-      assertChanges(changes, 0, 0, 0);
+      if (platform.os !== "win") {
+        const link = genLink(tmpDir, f.path);
+        await delay(1200);
+        assertChanges(changes, 0, 0, 0);
+      }
       const dir = genDir(tmpDir, { prefix: "." });
       genFile(dir.path);
       await delay(1200);
@@ -202,48 +207,50 @@ test(async function WatchByGenerator() {
   });
 });
 
-test(async function Benchmark() {
-  await inTmpDir(async tmpDir => {
-    const files = [];
-    generateManyFiles(tmpDir, files);
-    console.log(`generated ${files.length} files.`);
-    const end = watch(tmpDir).start(result => {
-      console.log(
-        `took ${result.time}ms to traverse ${result.fileCount} files`
-      );
-    });
-    try {
-      console.log("[Add]");
-      for (let i = 0; i < 4000; i++) {
-        await delay(1);
-        let fileName = files[Math.floor(Math.random() * files.length)];
-        fileName = fileName + "-" + i;
-        await writeFile(fileName, new Uint8Array(0));
-        files.push(fileName);
-      }
-      console.log("[Modify]");
-      for (let i = 0; i < 4000; i++) {
-        await delay(1);
-        await writeFile(
-          files[Math.floor(Math.random() * files.length)],
-          new Uint8Array(0)
+if (platform.os !== "win") {
+  test(async function Benchmark() {
+    await inTmpDir(async tmpDir => {
+      const files = [];
+      generateManyFiles(tmpDir, files);
+      console.log(`generated ${files.length} files.`);
+      const end = watch(tmpDir).start(result => {
+        console.log(
+          `took ${result.time}ms to traverse ${result.fileCount} files`
         );
-      }
-      console.log("[Delete]");
-      for (let i = 0; i < 4000; i++) {
-        await delay(1);
-        const index = Math.floor(Math.random() * files.length);
-        const fileName = files[index];
-        if (fileName) {
-          await remove(fileName);
+      });
+      try {
+        console.log("[Add]");
+        for (let i = 0; i < 4000; i++) {
+          await delay(1);
+          let fileName = files[Math.floor(Math.random() * files.length)];
+          fileName = fileName + "-" + i;
+          await writeFile(fileName, new Uint8Array(0));
+          files.push(fileName);
         }
-        files[index] = null;
+        console.log("[Modify]");
+        for (let i = 0; i < 4000; i++) {
+          await delay(1);
+          await writeFile(
+            files[Math.floor(Math.random() * files.length)],
+            new Uint8Array(0)
+          );
+        }
+        console.log("[Delete]");
+        for (let i = 0; i < 4000; i++) {
+          await delay(1);
+          const index = Math.floor(Math.random() * files.length);
+          const fileName = files[index];
+          if (fileName) {
+            await remove(fileName);
+          }
+          files[index] = null;
+        }
+      } finally {
+        await end();
       }
-    } finally {
-      await end();
-    }
+    });
   });
-});
+}
 
 const DEPTH = 7;
 const FILE_PER_DIR = 10;

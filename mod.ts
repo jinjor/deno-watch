@@ -39,7 +39,17 @@ export class Changes {
 }
 
 /** Options */
-export interface Options {
+export interface DetectorOptions {
+  /** If true, watcher checks the symlinked files/directories too. */
+  followSymlink?: boolean;
+  /** Ignores something like .gitignore, .vscode, etc. */
+  ignoreDotFiles?: boolean;
+  /** Path to search in regex (ex. "\.(ts|css)$") */
+  test?: RegExp | string;
+  /** Path to ignore in regex. */
+  ignore?: RegExp | string;
+}
+export interface Options extends DetectorOptions {
   /** The minimum interval[ms] of checking loop.
    * The next checking can be delayed until user program ends.
    *
@@ -53,14 +63,6 @@ export interface Options {
    *                  |<--- user program --->|
    */
   interval?: number;
-  /** If true, watcher checks the symlinked files/directories too. */
-  followSymlink?: boolean;
-  /** Ignores something like .gitignore, .vscode, etc. */
-  ignoreDotFiles?: boolean;
-  /** Path to search in regex (ex. "\.(ts|css)$") */
-  test?: RegExp | string;
-  /** Path to ignore in regex. */
-  ignore?: RegExp | string;
 }
 
 /** The watcher */
@@ -96,10 +98,7 @@ const defaultOptions = {
  * @param dirs
  * @param options
  */
-export default function watch(
-  targets: string | string[],
-  options?: Options
-): Watcher {
+export function watch(targets: string | string[], options?: Options): Watcher {
   const targets_ = Array.isArray(targets) ? targets : [targets];
   options = Object.assign({}, defaultOptions, options);
   return {
@@ -127,6 +126,8 @@ export default function watch(
     }
   };
 }
+export default watch;
+
 async function* run(
   targets: string[],
   options: Options,
@@ -135,37 +136,59 @@ async function* run(
     timeout: null
   }
 ) {
-  const { interval, followSymlink } = options;
-  const filter = makeFilter(options);
-  let lastStartTime = Date.now();
-  let files = {};
-  collect(files, targets, followSymlink, filter);
-
+  const detector = new Detector(targets, options);
+  const { startTime } = detector.init();
+  let lastStartTime = startTime;
   while (!state.abort) {
-    let waitTime = Math.max(0, interval - (Date.now() - lastStartTime));
+    let waitTime = Math.max(0, options.interval - (Date.now() - lastStartTime));
     await new Promise(resolve => {
       state.timeout = setTimeout(resolve, waitTime);
     });
     state.timeout = null;
     lastStartTime = Date.now();
-    let changes = new Changes();
-    changes.startTime = lastStartTime;
-    const newFiles = {};
-    await detectChanges(
-      files,
-      newFiles,
-      targets,
-      followSymlink,
-      filter,
-      changes
-    );
-    files = newFiles;
-    changes.fileCount = Object.keys(newFiles).length;
-    changes.endTime = Date.now();
-
+    const changes = await detector.detectChanges();
+    lastStartTime = changes.startTime;
     if (changes.length) {
       yield changes;
     }
+  }
+}
+
+/** This object detects changes for one step */
+export class Detector {
+  public files = {};
+  constructor(public targets: string[], public options: DetectorOptions) {}
+  /** Call this function first to collect initial files.
+   * Otherwise, all files existing at first will be marked as "ADDED" next time.
+   */
+  init(): { startTime: number; endTime: number; fileCount: number } {
+    const filter = makeFilter(this.options);
+    const changes = new Changes();
+    changes.startTime = Date.now();
+    collect(this.files, this.targets, this.options.followSymlink, filter);
+    changes.fileCount = Object.keys(this.files).length;
+    changes.endTime = Date.now();
+    return changes;
+  }
+  /** Traverse all files and detect changes. */
+  async detectChanges(): Promise<Changes> {
+    const changes = new Changes();
+    changes.startTime = Date.now();
+    const newFiles = {};
+    const filter = makeFilter(this.options);
+    await walk(
+      this.files,
+      newFiles,
+      this.targets,
+      this.options.followSymlink,
+      filter,
+      changes
+    );
+    Array.prototype.push.apply(changes.deleted, Object.keys(this.files));
+    this.files = newFiles;
+    changes.fileCount = Object.keys(newFiles).length;
+    changes.endTime = Date.now();
+    return changes;
   }
 }
 
@@ -190,18 +213,6 @@ function makeFilter({ test, ignore, ignoreDotFiles }: Options) {
     }
     return true;
   };
-}
-
-async function detectChanges(
-  prev: any,
-  curr: any,
-  targets: string[],
-  followSymlink: boolean,
-  filter: (f: FileInfo, path: string) => boolean,
-  changes: Changes
-): Promise<void> {
-  await walk(prev, curr, targets, followSymlink, filter, changes);
-  Array.prototype.push.apply(changes.deleted, Object.keys(prev));
 }
 
 async function walk(
