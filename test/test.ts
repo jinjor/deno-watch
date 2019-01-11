@@ -139,9 +139,11 @@ test(async function dotFiles() {
       const f = genFile(tmpDir, { prefix: "." });
       await delay(1200);
       assertChanges(changes, 0, 0, 0);
-      const link = genLink(tmpDir, f.path);
-      await delay(1200);
-      assertChanges(changes, 0, 0, 0);
+      if (platform.os !== "win") {
+        const link = genLink(tmpDir, f.path);
+        await delay(1200);
+        assertChanges(changes, 0, 0, 0);
+      }
       const dir = genDir(tmpDir, { prefix: "." });
       genFile(dir.path);
       await delay(1200);
