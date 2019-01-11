@@ -1,4 +1,4 @@
-import { writeFile, remove, mkdir, writeFileSync } from "deno";
+import { writeFile, remove, mkdir, writeFileSync, platform } from "deno";
 import watch from "../mod.ts";
 import { test, assertEqual } from "https://deno.land/x/testing@v0.2.5/mod.ts";
 import {
@@ -77,54 +77,57 @@ test(async function singleFile() {
     }
   });
 });
-test(async function Symlink() {
-  await inTmpDirs(2, async ([tmpDir, anotherDir]) => {
-    let changes = { added: [], modified: [], deleted: [] };
-    const end = watch(tmpDir, {
-      followSymlink: true
-    }).start(changes_ => {
-      changes = changes_;
+
+if (platform.os !== "win") {
+  test(async function Symlink() {
+    await inTmpDirs(2, async ([tmpDir, anotherDir]) => {
+      let changes = { added: [], modified: [], deleted: [] };
+      const end = watch(tmpDir, {
+        followSymlink: true
+      }).start(changes_ => {
+        changes = changes_;
+      });
+      try {
+        {
+          const f = genFile(anotherDir);
+          const link = genLink(tmpDir, f.path);
+          await delay(1200);
+          assertChanges(changes, 1, 0, 0);
+          f.modify();
+          await delay(1200);
+          assertChanges(changes, 0, 1, 0);
+        }
+        {
+          const f = genFile(anotherDir);
+          const link1 = genLink(anotherDir, f.path);
+          const link2 = genLink(tmpDir, link1.path);
+          const link3 = genLink(tmpDir, link2.path);
+          await delay(1200);
+          assertChanges(changes, 1, 0, 0);
+          f.modify();
+          await delay(1200);
+          assertChanges(changes, 0, 1, 0);
+        }
+        {
+          const dir = genDir(anotherDir);
+          const f = genFile(dir.path);
+          const link = genLink(tmpDir, f.path);
+          await delay(1200);
+          assertChanges(changes, 1, 0, 0);
+          f.modify();
+          await delay(1200);
+          assertChanges(changes, 0, 1, 0);
+        }
+      } catch (e) {
+        await tree(tmpDir);
+        await tree(anotherDir);
+        throw e;
+      } finally {
+        await end();
+      }
     });
-    try {
-      {
-        const f = genFile(anotherDir);
-        const link = genLink(tmpDir, f.path);
-        await delay(1200);
-        assertChanges(changes, 1, 0, 0);
-        f.modify();
-        await delay(1200);
-        assertChanges(changes, 0, 1, 0);
-      }
-      {
-        const f = genFile(anotherDir);
-        const link1 = genLink(anotherDir, f.path);
-        const link2 = genLink(tmpDir, link1.path);
-        const link3 = genLink(tmpDir, link2.path);
-        await delay(1200);
-        assertChanges(changes, 1, 0, 0);
-        f.modify();
-        await delay(1200);
-        assertChanges(changes, 0, 1, 0);
-      }
-      {
-        const dir = genDir(anotherDir);
-        const f = genFile(dir.path);
-        const link = genLink(tmpDir, f.path);
-        await delay(1200);
-        assertChanges(changes, 1, 0, 0);
-        f.modify();
-        await delay(1200);
-        assertChanges(changes, 0, 1, 0);
-      }
-    } catch (e) {
-      await tree(tmpDir);
-      await tree(anotherDir);
-      throw e;
-    } finally {
-      await end();
-    }
   });
-});
+}
 
 test(async function dotFiles() {
   await inTmpDir(async tmpDir => {
