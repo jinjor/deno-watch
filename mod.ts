@@ -96,10 +96,7 @@ const defaultOptions = {
  * @param dirs
  * @param options
  */
-export default function watch(
-  targets: string | string[],
-  options?: Options
-): Watcher {
+export function watch(targets: string | string[], options?: Options): Watcher {
   const targets_ = Array.isArray(targets) ? targets : [targets];
   options = Object.assign({}, defaultOptions, options);
   return {
@@ -127,6 +124,8 @@ export default function watch(
     }
   };
 }
+export default watch;
+
 async function* run(
   targets: string[],
   options: Options,
