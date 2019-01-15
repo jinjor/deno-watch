@@ -9,7 +9,7 @@ import {
   DenoError,
   ErrorKind
 } from "deno";
-import * as path from "https://deno.land/x/path@v0.2.5/index.ts";
+import * as path from "https://deno.land/x/fs/path.ts"; // fix later
 
 export function genName(pre = "", post = ""): string {
   return pre + Math.floor(Math.random() * 100000) + post;
