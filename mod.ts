@@ -1,14 +1,15 @@
-import {
+const {
   readDir,
   readlink,
   lstatSync,
   lstat,
   readDirSync,
   readlinkSync,
-  FileInfo,
   DenoError,
   ErrorKind
-} from "deno";
+} = Deno;
+
+type FileInfo = Deno.FileInfo;
 
 /** The result of checking in one loop */
 export class Changes {
