@@ -8,7 +8,7 @@ import {
   genLink,
   tree,
   inTmpDirs
-} from "random-files.ts";
+} from "./random-files.ts";
 
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));

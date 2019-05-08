@@ -5,10 +5,11 @@ const {
   lstat,
   readDirSync,
   readlinkSync,
-  FileInfo,
   DenoError,
   ErrorKind
 } = Deno;
+
+type FileInfo = Deno.FileInfo
 
 /** The result of checking in one loop */
 export class Changes {

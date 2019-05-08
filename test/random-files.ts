@@ -4,7 +4,6 @@ const {
   removeSync,
   symlinkSync,
   mkdirSync,
-  removeAllSync,
   run,
   DenoError,
   ErrorKind
@@ -39,7 +38,7 @@ export async function inTmpDirs(
   function cleanup() {
     tmpDirs.forEach(d => {
       try {
-        removeAllSync(d);
+        removeSync(d, { recursive: true });
       } catch (e) {
         if (e instanceof DenoError && e.kind === ErrorKind.NotFound) {
           // not a problem
@@ -66,7 +65,7 @@ class F {
   }
   remove() {
     if (this.isDir) {
-      removeAllSync(this.path);
+      removeSync(this.path, { recursive: true });
     } else {
       removeSync(this.path);
     }
