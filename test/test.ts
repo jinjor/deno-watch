@@ -1,4 +1,4 @@
-import { writeFile, remove, mkdir, writeFileSync, platform } from "deno";
+const { writeFile, remove, mkdir, writeFileSync, platform } = Deno;
 import watch from "../mod.ts";
 import { test, assertEqual } from "https://deno.land/x/testing@v0.2.5/mod.ts";
 import {

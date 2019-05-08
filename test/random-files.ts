@@ -1,4 +1,4 @@
-import {
+const {
   makeTempDirSync,
   writeFileSync,
   removeSync,
@@ -8,7 +8,7 @@ import {
   run,
   DenoError,
   ErrorKind
-} from "deno";
+} = Deno;
 import * as path from "https://deno.land/x/fs/path.ts"; // fix later
 
 export function genName(pre = "", post = ""): string {
