@@ -8,8 +8,8 @@ before_install:
   - export PATH=$HOME/.deno/bin:$PATH
 
 install:
-  - curl -L https://deno.land/x/install/install.py | python
+  - curl -fsSL https://deno.land/x/install/install.sh | sh
 
 script:
-  - deno -v
-  - deno test/test.ts --allow-write --allow-run
+  - deno version
+  - deno run --allow-read --allow-write --allow-run --no-prompt test/test.ts
