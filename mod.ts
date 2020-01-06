@@ -8,7 +8,7 @@ import {
   FileInfo,
   DenoError,
   ErrorKind
-} from "deno";
+} = Deno;
 
 /** The result of checking in one loop */
 export class Changes {
