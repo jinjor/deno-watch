@@ -5,8 +5,6 @@ const {
   lstat,
   readDirSync,
   readlinkSync,
-  DenoError,
-  ErrorKind
 } = Deno;
 
 type FileInfo = Deno.FileInfo;
@@ -242,7 +240,7 @@ async function walk(
         info = f;
       }
     } catch (e) {
-      if (e instanceof DenoError && e.kind === ErrorKind.NotFound) {
+      if (e instanceof Deno.errors.NotFound) {
         continue;
       } else {
         throw e;
@@ -296,7 +294,7 @@ function collect(
         info = f;
       }
     } catch (e) {
-      if (e instanceof DenoError && e.kind === ErrorKind.NotFound) {
+      if (e instanceof Deno.errors.NotFound) {
         continue;
       } else {
         throw e;
