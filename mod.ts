@@ -1,9 +1,9 @@
 const {
-  readDir,
+  readdir,
   readlink,
   lstatSync,
   lstat,
-  readDirSync,
+  readdirSync,
   readlinkSync,
 } = Deno;
 
@@ -253,7 +253,7 @@ async function walk(
       continue;
     }
     if (info.isDirectory()) {
-      const files = await readDir(path);
+      const files = await readdir(path);
       promises.push(walk(prev, curr, files, followSymlink, filter, changes));
     } else if (info.isFile()) {
       if (curr[path]) {
@@ -307,7 +307,7 @@ function collect(
       continue;
     }
     if (info.isDirectory()) {
-      collect(all, readDirSync(path), followSymlink, filter);
+      collect(all, readdirSync(path), followSymlink, filter);
     } else if (info.isFile()) {
       all[path] = info.modified || info.created;
     }
