@@ -1,3 +1,8 @@
+# Deprecated
+
+Use `Deno.watchFs()` instead!
+
+
 # Watch
 
 [![Build Status](https://travis-ci.org/jinjor/deno-watch.svg?branch=master)](https://travis-ci.org/jinjor/deno-watch)
