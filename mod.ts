@@ -1,14 +1,13 @@
-import {
-  readDir,
+const {
+  readdir,
   readlink,
   lstatSync,
   lstat,
-  readDirSync,
+  readdirSync,
   readlinkSync,
-  FileInfo,
-  DenoError,
-  ErrorKind
-} from "deno";
+} = Deno;
+
+type FileInfo = Deno.FileInfo;
 
 /** The result of checking in one loop */
 export class Changes {
@@ -241,7 +240,7 @@ async function walk(
         info = f;
       }
     } catch (e) {
-      if (e instanceof DenoError && e.kind === ErrorKind.NotFound) {
+      if (e instanceof Deno.errors.NotFound) {
         continue;
       } else {
         throw e;
@@ -254,7 +253,7 @@ async function walk(
       continue;
     }
     if (info.isDirectory()) {
-      const files = await readDir(path);
+      const files = await readdir(path);
       promises.push(walk(prev, curr, files, followSymlink, filter, changes));
     } else if (info.isFile()) {
       if (curr[path]) {
@@ -295,7 +294,7 @@ function collect(
         info = f;
       }
     } catch (e) {
-      if (e instanceof DenoError && e.kind === ErrorKind.NotFound) {
+      if (e instanceof Deno.errors.NotFound) {
         continue;
       } else {
         throw e;
@@ -308,7 +307,7 @@ function collect(
       continue;
     }
     if (info.isDirectory()) {
-      collect(all, readDirSync(path), followSymlink, filter);
+      collect(all, readdirSync(path), followSymlink, filter);
     } else if (info.isFile()) {
       all[path] = info.modified || info.created;
     }
